@@ -1,11 +1,11 @@
-package com.efishery.fetchapp.application.usecase
+package com.efishery.fetchapp.application.port.output
 
 import com.efishery.fetchapp.domain.entity.Dollar
 import com.efishery.fetchapp.domain.entity.Storages
 import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 
-interface StoragesWebCommand {
-    fun getListStoragesWeb(): Flux<Storages>
-    fun getDollar(): Mono<Dollar>
+interface StoragesWebClient {
+    fun getStorages(): Flux<Storages>
+    fun getUSDValue(): Mono<Dollar>
 }
