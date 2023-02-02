@@ -36,5 +36,4 @@ class StoragesWebClientAdapter: StoragesWebClient {
             .bodyToMono(FreeCurrencyAPIDTO::class.java)
             .mapNotNull { storagesConverter?.convertFreeCurrencyDTOtoDollarEntity(it) }
     }
-
 }

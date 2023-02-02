@@ -18,4 +18,9 @@ class RestConverter {
         response.timestamp = entity.timestamp
         return response
     }
+
+    fun addUSDValue(storagesResponseList: MutableList<StoragesResponse?>, dollar: Double): MutableList<StoragesResponse?> {
+        storagesResponseList.forEach { it?.priceUSD = dollar * it?.price!! }
+        return storagesResponseList
+    }
 }

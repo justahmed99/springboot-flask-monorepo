@@ -15,11 +15,12 @@ class FetchHandler {
     @Autowired
     private val converter: RestConverter? = null
 
-    fun getData(request: ServerRequest) = command!!.getListStoragesWeb()
-        .mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }
-        .collectList()
-        .flatMap { listOfStoragesWeb -> ServerResponse.ok().bodyValue(listOfStoragesWeb) }
+    fun getData(request: ServerRequest) = command!!.getDollar()
+        .zipWith(command.getListStoragesWeb().mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }.collectList()) {
+            dollar, storageList -> converter?.addUSDValue(storageList, dollar.value!!)
+        }.flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse!!)}
 
     fun getDollarValue(request: ServerRequest) = command!!.getDollar()
         .flatMap { dollar -> ServerResponse.ok().bodyValue(dollar) }
+
 }

@@ -11,6 +11,8 @@ class StoragesResponse {
     var areaKota: String? = null
     var size: Int? = null
     var price: Int? = null
+    @JsonProperty("price_usd")
+    var priceUSD: Double? = null
     @JsonProperty("tgl_parsed")
     var tglParsed: String? = null
     var timestamp: String? = null

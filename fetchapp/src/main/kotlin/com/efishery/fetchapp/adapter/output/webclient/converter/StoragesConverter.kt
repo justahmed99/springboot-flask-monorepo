@@ -24,7 +24,7 @@ class StoragesConverter {
 
     fun convertFreeCurrencyDTOtoDollarEntity(dto: FreeCurrencyAPIDTO): Dollar? {
         val entity = Dollar()
-        entity.value = dto.data?.USD
+        entity.value = dto.data?.usd
         return entity
     }
 }
