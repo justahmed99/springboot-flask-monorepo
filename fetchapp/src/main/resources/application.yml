@@ -1,2 +1,5 @@
 server:
   port: 9090
+
+cache:
+  duration-in-second: 300

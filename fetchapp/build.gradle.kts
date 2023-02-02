@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation ("org.springframework.boot:spring-boot-starter-webflux")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.2")
     implementation("org.springframework.boot:spring-boot-starter-cache:3.0.2")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
