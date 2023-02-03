@@ -3,6 +3,7 @@ package com.efishery.fetchapp.adapter.input.rest.utils
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.auth0.jwt.exceptions.JWTVerificationException
+import com.auth0.jwt.interfaces.DecodedJWT
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
@@ -30,5 +31,11 @@ class JwtUtils {
         } catch (e: JWTVerificationException) {
             false
         }
+    }
+
+    private fun role(serverRequest: ServerRequest): String {
+        val jwt = serverRequest.headers().header("Authorization").joinToString()
+        val decodedJWT: DecodedJWT = JWT.decode(jwt)
+        return decodedJWT.getClaim("role").toString()
     }
 }
