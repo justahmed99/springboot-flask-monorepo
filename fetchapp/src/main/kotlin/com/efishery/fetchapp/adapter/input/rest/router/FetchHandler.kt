@@ -2,7 +2,9 @@ package com.efishery.fetchapp.adapter.input.rest.router
 
 import com.efishery.fetchapp.adapter.input.rest.converter.RestConverter
 import com.efishery.fetchapp.application.usecase.StoragesWebCommand
+import com.efishery.fetchapp.adapter.input.rest.utils.JwtUtils
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import org.springframework.web.reactive.function.server.ServerRequest
 import org.springframework.web.reactive.function.server.ServerResponse
@@ -16,32 +18,39 @@ class FetchHandler {
     @Autowired
     private val converter: RestConverter? = null
 
-//    fun getData(request: ServerRequest) = command!!.getDollar()
-//        .zipWith(command.getListStoragesWeb().mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }.collectList()) {
-//            dollar, storageList -> converter?.addUSDValue(storageList, dollar.value!!)
-//        }.flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse!!)}
-
-//    fun getImageListPagePublic(request: ServerRequest?): Mono<ServerResponse?>? {
-//        return converter.getPageRequestParams(request)
-//            .flatMap { requestMap -> imageCommand.getImagesPage(requestMap, true) }
-//            .flatMap { images ->
-//                ServerResponse.ok()
-//                    .bodyValue(BaseResponse("image list", HttpStatus.OK.value(), images))
-//            }
-//    }
+    @Autowired
+    private val jwtUtils: JwtUtils? = null
 
     fun getData(request: ServerRequest?): Mono<ServerResponse?> {
-        return command!!.getListStoragesWeb()
-            .mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }
-            .collectList()
-            .flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse) }
+        return jwtUtils!!.verifyJwt(request!!)
+            .flatMap { status ->
+                if (status) {
+                    command!!.getListStoragesWeb()
+                        .mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }
+                        .collectList()
+                        .flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse) }
+                } else {
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                }
+            }
     }
 
     fun getDataConvertedToDollar(request: ServerRequest?): Mono<ServerResponse?> {
-        return command!!.getDollar()
-            .zipWith(command.getListStoragesWeb().mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }.collectList()) {
-                    dollar, storageList -> converter?.addUSDValue(storageList, dollar.value!!)
-            }.flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse!!)}
+        return jwtUtils!!.verifyJwt(request!!)
+            .flatMap { status ->
+                if (status) {
+                    command!!.getDollar()
+                        .zipWith(
+                            command.getListStoragesWeb()
+                                .mapNotNull { storage -> converter?.convertStoragesEntityToStoragesResponse(storage) }
+                                .collectList()
+                        ) { dollar, storageList ->
+                            converter?.addUSDValue(storageList, dollar.value!!)
+                        }.flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse!!) }
+                } else {
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                }
+            }
     }
 
     fun getDollarValue(request: ServerRequest) = command!!.getDollar()
