@@ -63,3 +63,6 @@ out/
 
 ### VS Code ###
 .vscode/
+
+database.db
+Database.db
