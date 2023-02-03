@@ -1,4 +1,3 @@
-# flask imports
 from flask import Flask, request, jsonify, make_response
 from flask_migrate import Migrate
 from src.database.models import db, User
@@ -9,8 +8,8 @@ import os
 
 load_dotenv()
 
-# creates Flask object
 app = Flask(__name__)
+# app configs
 app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS")
 app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
@@ -42,11 +41,9 @@ def get_user_detail(current_user):
 # login route
 @app.route("/auth/login", methods=["POST"])
 def login():
-    # creates dictionary of form data
     auth = request.get_json()
 
     if not auth or not auth["phone"] or not auth["password"]:
-        # returns 401 if any email or / and password is missing
         return make_response(
             jsonify({"message": "phone number and password is required!"}), 400
         )
@@ -54,7 +51,6 @@ def login():
     user = db.session.query(User).filter(User.phone == auth["phone"]).first()
 
     if not user:
-        # returns 403 if user does not exist
         return make_response(
             jsonify({"message": "incorrect phone number or password!"}), 403
         )
@@ -63,7 +59,6 @@ def login():
     if status:
         return make_response(jsonify({"token": token.encode().decode("utf-8")}), 200)
 
-    # returns 403 if password is wrong
     return make_response(
         jsonify({"message": "incorrect phone number or password!"}), 403
     )

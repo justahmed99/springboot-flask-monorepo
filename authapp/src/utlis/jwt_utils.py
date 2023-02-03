@@ -13,20 +13,19 @@ def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         token = None
-        # jwt is passed in the request header
-        if "x-access-token" in request.headers:
-            token = request.headers["x-access-token"]
-        # return 401 if token is not passed
+        if "Authorization" in request.headers:
+            print("authorization exist")
+            token = request.headers["Authorization"].replace("Bearer ", "")
+        
         if not token:
             return jsonify({"message": "Token is missing!"}), 401
 
         try:
-            # decoding the payload to fetch the stored details
+            # payload decode
             data = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
             user = User.query.filter_by(phone=data["phone"]).first()
         except:
             return jsonify({"message": "Token is invalid!"}), 401
-        # returns the current logged in users contex to the routes
         return f(user, *args, **kwargs)
 
     return decorated
@@ -37,7 +36,8 @@ def jwt_generator(user: User, password_input: str):
     token = None
     if check_password_hash(user.password, password_input):
         status = True
-        # generates the JWT Token
+
+        # generate JWT Token
         token = jwt.encode(
             {
                 "name": user.name,
