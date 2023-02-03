@@ -26,6 +26,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     implementation("org.springframework.boot:spring-boot-starter-tomcat:2.7.5")
     implementation("org.springframework.boot:spring-boot-starter-parent:2.7.5")
+    implementation("com.auth0:java-jwt:4.2.2")
 }
 
 tasks.withType<KotlinCompile> {
