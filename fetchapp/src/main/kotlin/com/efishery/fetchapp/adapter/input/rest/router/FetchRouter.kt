@@ -17,5 +17,9 @@ class FetchRouter {
         RequestPredicates.GET("/fetch-app/list/dollar").and(RequestPredicates.accept(MediaType.APPLICATION_JSON))
     ) {
         handler.getDataConvertedToDollar(it)
+    }.andRoute(
+        RequestPredicates.GET("/fetch-app/list/by-weekly").and(RequestPredicates.accept(MediaType.APPLICATION_JSON))
+    ) {
+        handler.getDataByWeekly(it)
     }
 }

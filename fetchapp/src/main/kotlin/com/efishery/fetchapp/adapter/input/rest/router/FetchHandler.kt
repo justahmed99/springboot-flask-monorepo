@@ -3,6 +3,7 @@ package com.efishery.fetchapp.adapter.input.rest.router
 import com.efishery.fetchapp.adapter.input.rest.converter.RestConverter
 import com.efishery.fetchapp.application.usecase.StoragesWebCommand
 import com.efishery.fetchapp.adapter.input.rest.utils.JwtUtils
+import com.efishery.fetchapp.domain.service.AggregationService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -20,6 +21,9 @@ class FetchHandler {
 
     @Autowired
     private val jwtUtils: JwtUtils? = null
+
+    @Autowired
+    private val aggregationService: AggregationService? = null
 
     fun getData(request: ServerRequest?): Mono<ServerResponse?> {
         return jwtUtils!!.verifyJwt(request!!)
@@ -53,7 +57,18 @@ class FetchHandler {
             }
     }
 
-    fun getDollarValue(request: ServerRequest) = command!!.getDollar()
-        .flatMap { dollar -> ServerResponse.ok().bodyValue(dollar) }
+    fun getDataByWeekly(request: ServerRequest?): Mono<ServerResponse?> {
+        return jwtUtils!!.verifyJwt(request!!)
+            .flatMap { status ->
+                if (status) {
+                    command!!.getListStoragesWeb()
+                        .collectList()
+                        .flatMap { Mono.just(aggregationService!!.weeklyGroup(it)) }
+                        .flatMap { ServerResponse.ok().bodyValue(it) }
+                } else {
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                }
+            }
+    }
 
 }
