@@ -1,4 +1,4 @@
-package com.efishery.fetchapp.adapter.output.webclient.cache
+package com.efishery.fetchapp.config
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import org.springframework.beans.factory.annotation.Value
