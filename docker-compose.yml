@@ -1,0 +1,26 @@
+version: '3'
+services:
+  fetchapp:
+    ports:
+      - 8089:9090
+    build:
+      context: fetchapp
+      dockerfile: Dockerfile
+    container_name: fetchapp
+    restart: always
+    networks:
+      - efishery-network
+
+  authapp:
+    ports:
+      - 8090:5000
+    build:
+      context: authapp
+      dockerfile: Dockerfile
+    container_name: authapp
+    restart: always
+    networks:
+      - efishery-network
+
+networks:
+  efishery-network:
