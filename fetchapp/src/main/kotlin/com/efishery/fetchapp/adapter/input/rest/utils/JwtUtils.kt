@@ -15,9 +15,7 @@ class JwtUtils {
     private var secret: String = ""
 
     fun verifyJwt(serverRequest: ServerRequest): Mono<Boolean> {
-        val jwtString = serverRequest.headers().header("Authorization").joinToString()
-            .replace("Bearer", "")
-            .replace(" ", "")
+        val jwtString = getJwtTokenFromRequest(serverRequest)
         return Mono.just(verify(jwtString))
     }
 
@@ -33,9 +31,15 @@ class JwtUtils {
         }
     }
 
-    private fun role(serverRequest: ServerRequest): String {
-        val jwt = serverRequest.headers().header("Authorization").joinToString()
+    fun role(serverRequest: ServerRequest): String {
+        val jwt = getJwtTokenFromRequest(serverRequest)
         val decodedJWT: DecodedJWT = JWT.decode(jwt)
-        return decodedJWT.getClaim("role").toString()
+        return decodedJWT.getClaim("role").toString().replace("\"", "")
+    }
+
+    private fun getJwtTokenFromRequest(serverRequest: ServerRequest): String {
+        return serverRequest.headers().header("Authorization").joinToString()
+            .replace("Bearer", "")
+            .replace(" ", "")
     }
 }

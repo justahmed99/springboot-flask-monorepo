@@ -1,6 +1,8 @@
 package com.efishery.fetchapp.adapter.input.rest.router
 
+import com.efishery.fetchapp.adapter.input.rest.constant.MessageConstant
 import com.efishery.fetchapp.adapter.input.rest.converter.RestConverter
+import com.efishery.fetchapp.adapter.input.rest.dto.MessageResponse
 import com.efishery.fetchapp.application.usecase.StoragesWebCommand
 import com.efishery.fetchapp.adapter.input.rest.utils.JwtUtils
 import com.efishery.fetchapp.domain.service.AggregationService
@@ -34,7 +36,8 @@ class FetchHandler {
                         .collectList()
                         .flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse) }
                 } else {
-                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                        .body(Mono.just(MessageResponse(MessageConstant.INVALID_TOKEN)), MessageResponse::class.java)
                 }
             }
     }
@@ -52,7 +55,8 @@ class FetchHandler {
                             converter?.addUSDValue(storageList, dollar.value!!)
                         }.flatMap { storageListResponse -> ServerResponse.ok().bodyValue(storageListResponse!!) }
                 } else {
-                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                        .body(Mono.just(MessageResponse(MessageConstant.INVALID_TOKEN)), MessageResponse::class.java)
                 }
             }
     }
@@ -60,13 +64,18 @@ class FetchHandler {
     fun getDataByWeekly(request: ServerRequest?): Mono<ServerResponse?> {
         return jwtUtils!!.verifyJwt(request!!)
             .flatMap { status ->
+                if (jwtUtils.role(request) != "admin") {
+                    return@flatMap ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                        .body(Mono.just(MessageResponse(MessageConstant.INVALID_ROLE)), MessageResponse::class.java)
+                }
                 if (status) {
                     command!!.getListStoragesWeb()
                         .collectList()
                         .flatMap { Mono.just(aggregationService!!.weeklyGroup(it)) }
                         .flatMap { ServerResponse.ok().bodyValue(it) }
                 } else {
-                    ServerResponse.status(HttpStatus.UNAUTHORIZED).build()
+                    ServerResponse.status(HttpStatus.UNAUTHORIZED)
+                        .body(Mono.just(MessageResponse(MessageConstant.INVALID_TOKEN)), MessageResponse::class.java)
                 }
             }
     }
