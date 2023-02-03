@@ -1,26 +1,25 @@
 # flask imports
 from flask import Flask, request, jsonify, make_response
-from werkzeug.security import generate_password_hash
 from flask_migrate import Migrate
 from src.database.models import db, User
 from src.utlis.jwt_utils import token_required, jwt_generator, register
-from src.utlis.string_utils import get_random_string
-import os
 
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
 
 # creates Flask object
 app = Flask(__name__)
-app.config.update(
-    DEBUG=os.getenv("DEBUG") == True,
-    SQLALCHEMY_DATABASE_URI=os.getenv("SQLALCHEMY_DATABASE_URI"),
-    SQLALCHEMY_TRACK_MODIFICATIONS=os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS"),
-    JWT_SECRET_KEY=os.getenv("JWT_SECRET_KEY"),
-)
-# app.config.from_object(os.environ["APP_SETTINGS"])
+app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE_URI")
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = os.getenv("SQLALCHEMY_TRACK_MODIFICATIONS")
+app.config["JWT_SECRET_KEY"] = os.getenv("JWT_SECRET_KEY")
+
 db.init_app(app)
+@app.before_first_request
+def create_tables():
+    db.create_all()
+
 migrate = Migrate(app, db, include_schemas=True)
 
 
@@ -28,6 +27,7 @@ migrate = Migrate(app, db, include_schemas=True)
 @app.route("/auth/user", methods=["GET"])
 @token_required
 def get_user_detail(current_user):
+    print("DEBUG", os.getenv("DEBUG"))
     return jsonify(
         {
             "user": {

@@ -1,12 +1,11 @@
 import jwt
 from functools import wraps
 from flask import request, jsonify
-from config import Config
 from src.database.models import User
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.utlis.string_utils import get_random_string
-from src.app import db
+from app import db
 import os
 
 
