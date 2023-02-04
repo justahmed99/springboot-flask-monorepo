@@ -30,7 +30,7 @@ class UserRepository:
         return user
 
     def get_by_phone_without_token(self, phone_number):
-        user = db.session.query(User).filter(User.phone == phone_number and (User.registry_exp_datetime > datetime.datetime.utcnow() or User.registry_exp_datetime == None)).first()
+        user = db.session.query(User).filter(User.phone == phone_number).filter(User.registry_exp_datetime == None).first()
         return user
 
     def create_user(self, user_json):
@@ -47,6 +47,9 @@ class UserRepository:
         return True, password
     
     def update_user(self, user: User, user_json):
+        user_check = self.get_by_phone_without_token(user.phone)
+        if user_check :
+            db.session.delete(user_check)
         password = get_random_string(4)
         user = User(
             name=user_json["name"],
