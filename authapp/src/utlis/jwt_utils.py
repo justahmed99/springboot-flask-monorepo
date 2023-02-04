@@ -5,8 +5,16 @@ from src.database.models import User
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from src.utlis.string_utils import get_random_string
+from src.service.user_service import UserRepository, UserService
+from src.service.jwt_service import JwtRepository, JwtService
 from app import db
 import os
+
+user_repo = UserRepository()
+user_service = UserService(user_repo)
+
+jwt_repo = JwtRepository()
+jwt_service = JwtService(jwt_repo)
 
 
 def token_required(f):
@@ -22,8 +30,8 @@ def token_required(f):
 
         try:
             # payload decode
-            data = jwt.decode(token, os.getenv("JWT_SECRET_KEY"), algorithms=["HS256"])
-            user = User.query.filter_by(phone=data["phone"]).first()
+            data = jwt_service.jwt_decode(token)
+            user = user_service.get_user_by_phone(data["phone"])
         except:
             return jsonify({"message": "Token is invalid!"}), 401
         return f(user, *args, **kwargs)
@@ -32,67 +40,4 @@ def token_required(f):
 
 
 def jwt_generator(user: User, password_input: str):
-    status = False
-    token = None
-    if check_password_hash(user.password, password_input):
-        status = True
-        # generate JWT Token
-        if user.jwt_token == None :
-            current_date = datetime.utcnow()
-            user.registry_iat_datetime = current_date
-            user.registry_exp_datetime = user.registry_iat_datetime + timedelta(minutes=int(os.getenv("JWT_VALIDITY_TIME")))
-            token = jwt.encode(
-                {
-                    "name": user.name,
-                    "phone": user.phone,
-                    "role": user.role,
-                    "iat": user.registry_iat_datetime,
-                    "exp": user.registry_exp_datetime,
-                },
-                os.getenv("JWT_SECRET_KEY"),
-            )
-
-            user.jwt_token = token
-
-            db.session.add(user)
-            db.session.commit()
-
-    return status, user.jwt_token
-
-
-def register(data):
-    name, phone, role = data["name"], data["phone"], data["role"]
-    password = get_random_string(4)
-    current_date = datetime.utcnow()
-
-    user = User.query.filter_by(phone=phone).first()
-    if not user:
-        user = User(
-            name=name,
-            phone=phone,
-            role=role,
-            password=generate_password_hash(
-                password=password, method="pbkdf2:sha256", salt_length=16
-            )
-        )
-
-        db.session.add(user)
-        db.session.commit()
-        return True, password
-    else:
-        if user.jwt_token == None :
-            return False, None
-        else :
-            print(user.registry_exp_datetime)
-            if user.registry_exp_datetime < datetime.utcnow() :
-               user = User(
-                name=name,
-                phone=phone,
-                role=role,
-                password=generate_password_hash(
-                    password=password, method="pbkdf2:sha256", salt_length=16
-                )
-            )
-            db.session.add(user)
-            db.session.commit()
-            return True, password
+    return jwt_service.generate_token(user, password_input)
