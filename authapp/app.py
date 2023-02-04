@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, make_response
 from flask_migrate import Migrate
 from src.database.models import db, User
 from src.utlis.jwt_utils import token_required, jwt_generator, register
+from datetime import datetime
 
 from dotenv import load_dotenv
 import os
@@ -48,7 +49,7 @@ def login():
             jsonify({"message": "phone number and password is required!"}), 400
         )
 
-    user = db.session.query(User).filter(User.phone == auth["phone"]).first()
+    user = db.session.query(User).filter(User.phone == auth["phone"] and (User.registry_exp_datetime > datetime.utcnow() or User.registry_exp_datetime == None)).first()
 
     if not user:
         return make_response(
@@ -75,7 +76,7 @@ def signup():
         return make_response(jsonify({"password": password}), 201)
     else:
         return make_response(
-            jsonify({"message": "User already exists. Please Log in."}), 202
+            jsonify({"message": "Your registration is still valid. Please Log in."}), 202
         )
 
 

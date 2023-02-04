@@ -36,24 +36,34 @@ def jwt_generator(user: User, password_input: str):
     token = None
     if check_password_hash(user.password, password_input):
         status = True
-
         # generate JWT Token
-        token = jwt.encode(
-            {
-                "name": user.name,
-                "phone": user.phone,
-                "role": user.role,
-                "exp": datetime.utcnow() + timedelta(minutes=30),
-            },
-            os.getenv("JWT_SECRET_KEY"),
-        )
+        if user.jwt_token == None :
+            current_date = datetime.utcnow()
+            user.registry_iat_datetime = current_date
+            user.registry_exp_datetime = user.registry_iat_datetime + timedelta(minutes=int(os.getenv("JWT_VALIDITY_TIME")))
+            token = jwt.encode(
+                {
+                    "name": user.name,
+                    "phone": user.phone,
+                    "role": user.role,
+                    "iat": user.registry_iat_datetime,
+                    "exp": user.registry_exp_datetime,
+                },
+                os.getenv("JWT_SECRET_KEY"),
+            )
 
-    return status, token
+            user.jwt_token = token
+
+            db.session.add(user)
+            db.session.commit()
+
+    return status, user.jwt_token
 
 
 def register(data):
     name, phone, role = data["name"], data["phone"], data["role"]
     password = get_random_string(4)
+    current_date = datetime.utcnow()
 
     user = User.query.filter_by(phone=phone).first()
     if not user:
@@ -63,11 +73,26 @@ def register(data):
             role=role,
             password=generate_password_hash(
                 password=password, method="pbkdf2:sha256", salt_length=16
-            ),
+            )
         )
 
         db.session.add(user)
         db.session.commit()
         return True, password
     else:
-        return False, None
+        if user.jwt_token == None :
+            return False, None
+        else :
+            print(user.registry_exp_datetime)
+            if user.registry_exp_datetime < datetime.utcnow() :
+               user = User(
+                name=name,
+                phone=phone,
+                role=role,
+                password=generate_password_hash(
+                    password=password, method="pbkdf2:sha256", salt_length=16
+                )
+            )
+            db.session.add(user)
+            db.session.commit()
+            return True, password
